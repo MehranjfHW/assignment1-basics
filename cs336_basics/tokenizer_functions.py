@@ -196,7 +196,7 @@ def update_byte_counts(comb: tuple, new_comb:tuple, freq:int, byte_counts:dict) 
         
         return None
     
-def  update_pair_to_combs(comb: tuple, new_comb:tuple, pairs_to_combs: dict) ->None:
+def  update_pair_to_combs(comb: tuple, new_comb:tuple, pair_to_combs: dict) ->None:
         
         
         for index in range(len(comb) - 1):
