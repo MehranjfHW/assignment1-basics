@@ -224,7 +224,7 @@ def update_pairs_freq_heap(changed_pairs:set,pairs_freq_heap:heapq,  pairs_freq:
         return None
     
 def  pick_best_pair(pairs_freq_heap:heapq,pairs_freq:dict)-> tuple:
-    
+    best_pair = None
     while pairs_freq_heap:
         freq_min,_,_, pair = heapq.heappop(pairs_freq_heap)
         
