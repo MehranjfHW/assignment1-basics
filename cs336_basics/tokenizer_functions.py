@@ -19,14 +19,17 @@ def download_token_data(token_data_path:Path, token_data_file_name : str, url:st
      if token_data_file_path.is_file():  # check if the file already exists or the download is failed
             print("A file exists in the given path")
             return None
-     while True:
+     attempt=0
+     while attempt<5:
         try:
+            attempt +=1
             print("Downloading the text file from the web...")
             urllib.request.urlretrieve(url, token_data_file_path) #download the text file and save it in the data directory
             print("Download was successful")
             break
         except:
-            
+            if attempt==5:
+                print("I am tired of doanloading, it is not working.")
             print("Failed to download the text file. Let's try again.")
             
      return None
@@ -76,7 +79,7 @@ def count_expressions_in_string(story: str, PAT: str, counts: dict) -> None:
             counts[match.group()] += 1
                 
 
-def count_tokens_in_file(file_path: Path, PAT: str, dividing_str: list, chunk_size: int = 65536) -> dict:
+def count_tokens_in_file(file_path: Path, PAT: str, dividing_str: str, chunk_size: int = 65536) -> dict:
     """Count the frequency of each regular expression match in a text file."""
 
     buffer = ""            # store the unfinished story from each iteration
