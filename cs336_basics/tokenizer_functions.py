@@ -81,7 +81,9 @@ def count_expressions_in_string(story: str, PAT: str, counts: dict) -> None:
 
 def count_tokens_in_file(file_path: Path, PAT: str, special_tokens: list, chunk_size: int = 65536) -> dict:
     """Count the frequency of each regular expression match in a text file."""
-    escaped_tokens = [re.escape(token) for token in special_tokens]
+    pattern = "|".join(
+    re.escape(token)
+    for token in sorted(special_tokens, key=len, reverse=True))
     buffer = ""            # store the unfinished story from each iteration
     counts = {}            # initialize an empty dictionary to store the counts of regular expression matches in utf-8 encoded
     story_count = 0        # initialize the story count to 0
@@ -92,7 +94,7 @@ def count_tokens_in_file(file_path: Path, PAT: str, special_tokens: list, chunk_
                
               buffer += chunk    #add the chunk to the unfinished story from the previous iteration     
                        
-              parts = re.split(escaped_tokens, buffer)    #devide the buffer into stories using the dividing string
+              parts = re.split(pattern, buffer)    #devide the buffer into stories using the dividing string
               
               buffer = parts.pop()                  # store the last part of the buffer as the unfinished story for the next iteration
               
