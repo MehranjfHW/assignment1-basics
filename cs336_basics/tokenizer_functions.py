@@ -121,7 +121,7 @@ def initialize_vocab(special_tokens:list=[]) -> dict:
     vocab={i: bytes([i]) for i in range(256)}
     for i, token in enumerate(special_tokens):
        vocab[256+i] = bytes(token, "utf-8")
-    return 
+    return vocab
 
 
 def update_pairs_freq_p(comb: tuple, freq: int, pairs_freq: dict) -> None:
@@ -240,6 +240,9 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
     
 
    while  len(vocab) < intended_vocab_size:
+       
+       changed_pairs = set()  #storing pairs whoses frequencies need to change after vocab is updated
+       
        if pairs_freq==None:    # initialise
         
            pairs_freq = {}   #storing frequency of each pair in data set
@@ -248,7 +251,7 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
 
            pair_to_combs={}       #storing which regular expressions contains the pair
 
-           changed_pairs = set()  #storing pairs whoses frequencies need to change after vocab is updated
+           
 
         
         
@@ -269,13 +272,7 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
            heapq.heapify(pairs_freq_heap)          # sorting
     
     
-           best_pair = heapq.heappop(pairs_freq_heap)[-1]      #choosing most frequent pair
-
-           new_token = best_pair[0] + best_pair[1]
-
-           vocab[len(vocab)] = new_token                     #updating vocab
-        
-           merges.append(best_pair) #storing the new vocabs
+           
 
 
        
@@ -291,7 +288,7 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
             
        vocab[len(vocab)] = new_token
         
-       if len(pairs_freq) % 100 == 0:
+       if len(vocab) % 100 == 0:
           print(f"vocab size: {len(vocab)}")
       
        
