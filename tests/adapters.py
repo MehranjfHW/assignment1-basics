@@ -9,6 +9,10 @@ import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
 
+import heapq               # findind the most frequent pairs
+
+from cs336_basics.tokenizer_functions import( download_token_data, initialize_vocab, count_tokens_in_file, enlarging_vocab)
+
 
 def run_linear(
     d_in: int,
@@ -561,7 +565,11 @@ def get_tokenizer(
     """
     raise NotImplementedError
 
-
+from cs336_basics.tokenizer_functions import (
+    count_tokens_in_file,
+    initialize_vocab,
+    enlarging_vocab,
+)
 def run_train_bpe(
     input_path: str | os.PathLike,
     vocab_size: int,
@@ -589,4 +597,16 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    raise NotImplementedError
+    PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+    
+    
+    byte_counts = count_tokens_in_file(input_path, PAT, special_tokens)   #Read the data and creat a dictionary of regular expressions in bytes format and their frequency
+    
+    
+
+    vocab = initialize_vocab(special_tokens)      #Initialize the single-byte vocabulary
+    
+    vocab, _, _, _, _, merges= enlarging_vocab(vocab=vocab, intended_vocab_size=vocab_size, byte_counts=byte_counts)
+    
+    return vocab , merges
+   
