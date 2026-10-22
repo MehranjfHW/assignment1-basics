@@ -444,7 +444,7 @@ class Tokenizer:
 
     def encode(self, text):
         return text_encoder(
-            text, self.PAT, self.vocab,
+            text, self.PAT,
             self.bytes_to_id, self.special_tokens, self.merges
         )
 
