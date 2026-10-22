@@ -11,7 +11,9 @@ from torch import Tensor
 
 import heapq               # findind the most frequent pairs
 
-from cs336_basics.tokenizer_functions import( download_token_data, initialize_vocab, count_tokens_in_file, enlarging_vocab)
+from cs336_basics.tokenizer_functions import( download_token_data, initialize_vocab, count_tokens_in_file, enlarging_vocab, Tokenizer)
+
+
 
 
 def run_linear(
@@ -563,12 +565,9 @@ def get_tokenizer(
     Returns:
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
-    raise NotImplementedError
+    return Tokenizer(vocab, merges, special_tokens)
 
-from cs336_basics.tokenizer_functions import (
-    count_tokens_in_file,
-    initialize_vocab,
-    enlarging_vocab,
+
 )
 def run_train_bpe(
     input_path: str | os.PathLike,
