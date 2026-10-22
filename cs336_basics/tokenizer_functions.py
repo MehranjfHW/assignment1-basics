@@ -426,3 +426,29 @@ def text_encoder(text:str, PAT:str, bytes_to_id:dict, special_tokens:list[str], 
     
                
     return text_encoded 
+
+
+class Tokenizer:
+
+    PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+
+    def __init__(self, vocab, merges, special_tokens=None):
+        self.vocab = vocab
+        self.merges = merges
+        self.special_tokens = special_tokens or []
+
+        self.bytes_to_id = {
+            token: token_id
+            for token_id, token in vocab.items()
+        }
+
+    def encode(self, text):
+        return text_encoder(
+            text, self.PAT, self.vocab,
+            self.bytes_to_id, self.special_tokens, self.merges
+        )
+
+    def decode(self, ids):
+        return b"".join(
+            self.vocab[i] for i in ids
+        ).decode("utf-8", errors="replace")
