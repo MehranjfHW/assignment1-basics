@@ -323,3 +323,106 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
          
               
    return vocab, byte_counts, pairs_freq, pairs_freq_heap, pair_to_combs, merges
+
+
+
+
+
+# ------------------------------------------------------  Encoder functions
+
+
+def  match_encoded(match:str ,bytes_to_id : dict ,encoded_matches :dict, merges:list) -> list[int] :
+    
+    match_bytes=[bytes([b]) for b in match.encode("utf-8")]
+    
+    for byte_1, byte_2 in merges:
+        match_bytes_new=[]
+        index=0
+        while index <len(match_bytes):
+            if index <len(match_bytes)-1 and byte_1==match_bytes[index] and byte_2==match_bytes[index+1]:
+                match_bytes_new.append(byte_1+byte_2)
+                index +=2
+                
+            else:
+                match_bytes_new.append(match_bytes[index])
+                index +=1
+            
+        match_bytes=match_bytes_new
+        
+    match_encoded=[bytes_to_id[x] for x in match_bytes]
+    
+    encoded_matches[match]=match_encoded
+    
+    return match_encoded
+        
+        
+        
+        
+        
+        
+        
+            
+            
+    
+    
+
+
+
+
+def story_encoded(story:str, PAT:str, bytes_to_id:dict, encoded_matches:dict, merges:list) -> list[int]:
+    """ encoding a story"""
+    
+    regex_file=re.finditer(PAT, story)      #finding regular expression in the story
+    
+    story_encoded=[]      #initialising the list storing the encoding
+    
+    for match in regex_file:
+        
+        if match.group() in encoded_matches:
+            
+            story_encoded += encoded_matches[match.group()]
+        
+        else:
+            
+            story_encoded += match_encoded(match.group() , bytes_to_id, encoded_matches, merges)
+            
+        
+    return story_encoded
+
+
+
+def text_encoder(text:str, PAT:str, bytes_to_id:dict, special_tokens:list[str], merges:list ) -> list[int]:
+    
+    
+    encoded_matches={}         # A dictionary to save the encoding of a regular expression after applying PAT
+     
+    re_pecial_tokens = "|".join(
+    re.escape(token)
+    for token in sorted(special_tokens, key=len, reverse=True))
+    
+    text_encoded =[]            # initialize an empty list to store the encoding
+    
+    if special_tokens:
+       parts_special_tokens = re.split(f"({re_pecial_tokens})", text) #devide the buffer into stories or special tokens using the special tokens
+    else:
+       parts_special_tokens = [text]                                  #case with no special token
+              
+                       
+              
+              
+              
+    for story in parts_special_tokens:
+                  
+        if story in special_tokens:                       
+                      
+            text_encoded.append(bytes_to_id[story.encode("utf-8")])
+                      
+        else:
+                      
+            text_encoded +=story_encoded(story, PAT, bytes_to_id,encoded_matches, merges)
+                  
+                  
+                  
+    
+               
+    return text_encoded 
