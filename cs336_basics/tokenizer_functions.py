@@ -242,7 +242,8 @@ def  pick_best_pair(pairs_freq_heap:heapq,pairs_freq:dict)-> tuple:
 
 def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs_freq:dict=None, pairs_freq_heap:dict=None, pair_to_combs:dict=None, changed_pairs:dict=None, merges:list=None) -> tuple:
   
-   merges=[]
+   if not merges:
+       merges=[]
 
    while  len(vocab) < intended_vocab_size:
        
