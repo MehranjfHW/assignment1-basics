@@ -3,7 +3,7 @@ from pathlib import Path   # directory and file path manipulation
 import urllib.request    # for downloading files from the web
 
 import regex as re       # processing text with regular expressions
-
+from collections.abc import Iterator
 
 
 
@@ -331,27 +331,40 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
 # ------------------------------------------------------  Encoder functions
 
 
-def  match_encoded(match:str ,bytes_to_id : dict ,encoded_matches :dict, merges:list) -> list[int] :
+def  match_encoded(match:str ,bytes_to_id : dict ,encoded_matches :dict, merge_ranks:dict) -> list[int] :
     
     match_bytes=[bytes([b]) for b in match.encode("utf-8")]
     
-    for byte_1, byte_2 in merges:
-        match_bytes_new=[]
-        index=0
-        while index <len(match_bytes):
-            if index <len(match_bytes)-1 and byte_1==match_bytes[index] and byte_2==match_bytes[index+1]:
-                match_bytes_new.append(byte_1+byte_2)
-                index +=2
-                
-            else:
-                match_bytes_new.append(match_bytes[index])
-                index +=1
-            
-        match_bytes=match_bytes_new
+    
+    
+    while len(match_bytes)>1:
         
+        possible_pairs_heapq=[]
+        
+        for i in range(len(match_bytes)-1):
+            if  (match_bytes[i], match_bytes[i + 1]) in merge_ranks:
+                
+                pair=(match_bytes[i], match_bytes[i+1])
+        
+                possible_pairs_heapq.append((merge_ranks[pair], pair)) 
+        
+        heapq.heapify(possible_pairs_heapq)
+        
+        if not possible_pairs_heapq:
+           break
+        
+        rank, best_pair = heapq.heappop(possible_pairs_heapq)
+        
+        i
+        if best_pair==None:
+            break
+        
+        match_bytes=update_comb_new_token(match_bytes, best_pair)
+    
     match_encoded=[bytes_to_id[x] for x in match_bytes]
     
     encoded_matches[match]=match_encoded
+    
     
     return match_encoded
         
@@ -369,8 +382,10 @@ def  match_encoded(match:str ,bytes_to_id : dict ,encoded_matches :dict, merges:
 
 
 
-def story_encoded(story:str, PAT:str, bytes_to_id:dict, encoded_matches:dict, merges:list) -> list[int]:
+def story_encoded(story:str, PAT:str, bytes_to_id:dict, encoded_matches:dict, merge_ranks:list) -> list[int]:
     """ encoding a story"""
+    
+    
     
     regex_file=re.finditer(PAT, story)      #finding regular expression in the story
     
@@ -384,14 +399,23 @@ def story_encoded(story:str, PAT:str, bytes_to_id:dict, encoded_matches:dict, me
         
         else:
             
-            story_encoded += match_encoded(match.group() , bytes_to_id, encoded_matches, merges)
+            story_encoded += match_encoded(match.group() , bytes_to_id, encoded_matches, merge_ranks)
             
         
     return story_encoded
 
 
 
-def text_encoder(text:str, PAT:str, bytes_to_id:dict, special_tokens:list[str], merges:list ) -> list[int]:
+
+
+    
+
+        
+    
+
+def text_encoder(text:str, PAT:str, bytes_to_id:dict, special_tokens:list[str], merge_ranks:dict ) -> list[int]:
+    
+   
     
     
     encoded_matches={}         # A dictionary to save the encoding of a regular expression after applying PAT
@@ -419,13 +443,22 @@ def text_encoder(text:str, PAT:str, bytes_to_id:dict, special_tokens:list[str], 
                       
         else:
                       
-            text_encoded +=story_encoded(story, PAT, bytes_to_id,encoded_matches, merges)
+            text_encoded +=story_encoded(story, PAT, bytes_to_id,encoded_matches, merge_ranks)
                   
                   
                   
     
                
     return text_encoded 
+   
+
+
+def iter_encoder(iterable, PAT:str, bytes_to_id:dict, special_tokens:list[str], merges:list ) -> Iterator[int]:
+    
+    
+    
+    
+    
 
 
 class Tokenizer:
@@ -436,12 +469,68 @@ class Tokenizer:
         self.vocab = vocab
         self.merges = merges
         self.special_tokens = special_tokens or []
+        self.merge_ranks={ x:i for i, x in enumerate(self.merges)}
+        self.re_pecial_tokens = "|".join(
+                re.escape(token)
+                for token in sorted(self.special_tokens, key=len, reverse=True))
 
         self.bytes_to_id = {
             token: token_id
             for token_id, token in vocab.items()
         }
-
+        
+    def iter_encoder(self, iterable):
+        
+        buffer=""
+            
+        if not self.special_tokens:
+            for chunk in iterable:
+                        
+                        
+                buffer += chunk
+                        
+                buffer_last_matche=list(re.finditer(PAT, buffer))[-1].end()
+                        
+                if buffer_last_matche==len(buffer)-1:
+                     text=buffer
+                     buffer=""
+                           
+                        
+                else:
+                    text=buffer[:buffer_last_matche+1]
+                    buffer=buffer[buffer_last_matche+1:]
+                        
+                yield from  self.encode(text)
+                        
+        else:
+            
+            for chunk in iterable:
+                
+                
+                buffer += chunk
+                
+                
+                        
+                        
+                special_tokens_in_buffer=list(re.finditer(self.re_pecial_tokens, buffer))
+                if not special_tokens_in_buffer:
+                    continue
+                
+                last_special_token_end=special_tokens_in_buffer[-1].end()
+                
+                text=buffer[0:last_special_token_end]
+                
+                buffer=buffer[last_special_token_end:]
+                
+                yield from self.encode(text)
+                
+                
+                 
+                
+            yield from self.encode(buffer)
+        
+        
+        
     def encode(self, text):
         return text_encoder(
             text, self.PAT,
