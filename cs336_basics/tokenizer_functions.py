@@ -452,14 +452,11 @@ def text_encoder(text:str, PAT:str, bytes_to_id:dict, special_tokens:list[str], 
     return text_encoded 
    
 
-
-def iter_encoder(iterable, PAT:str, bytes_to_id:dict, special_tokens:list[str], merges:list ) -> Iterator[int]:
     
     
     
     
     
-
 
 class Tokenizer:
 
