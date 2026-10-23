@@ -486,7 +486,7 @@ class Tokenizer:
                         
                 buffer += chunk
                         
-                buffer_last_matche=list(re.finditer(PAT, buffer))[-1].end()
+                buffer_last_matche=list(re.finditer(self.PAT, buffer))[-1].end()
                         
                 if buffer_last_matche==len(buffer)-1:
                      text=buffer
