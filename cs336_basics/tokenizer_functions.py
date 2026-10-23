@@ -466,7 +466,7 @@ class Tokenizer:
         self.vocab = vocab
         self.merges = merges
         self.special_tokens = special_tokens or []
-        self.merge_ranks={ x:i for i, x in enumerate(self.merges)}
+        self.merge_ranks={x:i for i, x in enumerate(self.merges)}
         self.re_pecial_tokens = "|".join(
                 re.escape(token)
                 for token in sorted(self.special_tokens, key=len, reverse=True))
@@ -531,7 +531,7 @@ class Tokenizer:
     def encode(self, text):
         return text_encoder(
             text, self.PAT,
-            self.bytes_to_id, self.special_tokens, self.merges
+            self.bytes_to_id, self.special_tokens, self.merge_ranks
         )
 
     def decode(self, ids):
