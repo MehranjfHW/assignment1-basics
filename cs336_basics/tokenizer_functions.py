@@ -476,7 +476,7 @@ class Tokenizer:
             for token_id, token in vocab.items()
         }
         
-    def iter_encoder(self, iterable):
+    def encode_iterable(self, iterable):
         
         buffer=""
             
