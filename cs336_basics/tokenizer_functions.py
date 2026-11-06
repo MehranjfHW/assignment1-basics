@@ -77,6 +77,8 @@ def count_expressions_in_string(story: str, PAT: str, counts: dict) -> None:
         else:
             
             counts[match.group()] += 1
+            
+    return None
                 
 
 def count_tokens_in_file(file_path: Path, PAT: str, special_tokens: list, chunk_size: int = 65536) -> dict:
@@ -261,7 +263,7 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
 
         
         
-           for comb , freq in byte_counts.items():
+           for comb , freq in byte_counts.items():        # initisalising the pairs_freq and pair_to_combs dictionaries in the data set 
     
               update_pairs_freq_p(comb, freq, pairs_freq)
         
@@ -271,7 +273,7 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
   
             
             
-           for pair, freq in pairs_freq.items():
+           for pair, freq in pairs_freq.items():       # adding the pairs and their frequencies to the heapq for finding the most frequent pair
     
                 pairs_freq_heap.append(heap_entry(pair, freq))
     
@@ -283,7 +285,7 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
 
        
        
-       best_pair=pick_best_pair(pairs_freq_heap,pairs_freq)
+       best_pair=pick_best_pair(pairs_freq_heap,pairs_freq)      # finding the most frequent pair in the data set
                 
        if best_pair is None:
             break
@@ -292,7 +294,7 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
             
        new_token = best_pair[0] + best_pair[1]
             
-       vocab[len(vocab)] = new_token
+       vocab[len(vocab)] = new_token                  #updating the vocab with the new token
         
        if len(vocab) % 100 == 0:
           print(f"vocab size: {len(vocab)}")
@@ -300,7 +302,7 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
        
        
        
-       for comb in pair_to_combs.get(best_pair, set()).copy():
+       for comb in pair_to_combs.get(best_pair, set()).copy():     #updating the dictionaries for the next round of finding the most frequent pair in the data set
         
         
             new_comb=update_comb_new_token(comb, best_pair)
@@ -333,14 +335,15 @@ def enlarging_vocab(vocab:dict, intended_vocab_size:int, byte_counts:dict, pairs
 
 
 def  match_encoded(match:str ,bytes_to_id : dict ,encoded_matches :dict, merge_ranks:dict) -> list[int] :
+    """ encoding a regular expression match to a list of integers using the bytes_to_id dictionary and the merge_ranks dictionary """
     
-    match_bytes=[bytes([b]) for b in match.encode("utf-8")]
+    match_bytes=[bytes([b]) for b in match.encode("utf-8")]     #creating a list of bytes for the input string
     
     
     
     while len(match_bytes)>1:
         
-        possible_pairs_heapq=[]
+        possible_pairs_heapq=[]                                 # creating a list of possible pairs to merge in the match_bytes together with their ranks in the merge_ranks dictionary
         
         for i in range(len(match_bytes)-1):
             if  (match_bytes[i], match_bytes[i + 1]) in merge_ranks:
@@ -354,17 +357,17 @@ def  match_encoded(match:str ,bytes_to_id : dict ,encoded_matches :dict, merge_r
         if not possible_pairs_heapq:
            break
         
-        rank, best_pair = heapq.heappop(possible_pairs_heapq)
+        rank, best_pair = heapq.heappop(possible_pairs_heapq)     #Finding the best pair to merge in the match_bytes based on the ranks in the merge_ranks dictionary
         
-        i
+        
         if best_pair==None:
             break
         
-        match_bytes=update_comb_new_token(match_bytes, best_pair)
+        match_bytes=update_comb_new_token(match_bytes, best_pair)  #updating the match_bytes by merging the best pair in the match_bytes
     
-    match_encoded=[bytes_to_id[x] for x in match_bytes]
+    match_encoded=[bytes_to_id[x] for x in match_bytes]           #encoding the match_bytes to a list of integers using the bytes_to_id dictionary
     
-    encoded_matches[match]=match_encoded
+    encoded_matches[match]=match_encoded                    # creating a dictionary to save the encoding of a regular expresssion if they appear again in the story
     
     
     return match_encoded
@@ -392,11 +395,11 @@ def story_encoded(story:str, PAT:str, bytes_to_id:dict, encoded_matches:dict, me
     
     story_encoded=[]      #initialising the list storing the encoding
     
-    for match in regex_file:
+    for match in regex_file:       #encoding each regular expression
         
         if match.group() in encoded_matches:
             
-            story_encoded += encoded_matches[match.group()]
+            story_encoded += encoded_matches[match.group()]   # it may have benn encoded before, so we can use the encoding from the dictionary
         
         else:
             
@@ -415,7 +418,7 @@ def story_encoded(story:str, PAT:str, bytes_to_id:dict, encoded_matches:dict, me
     
 
 def text_encoder(text:str, PAT:str, bytes_to_id:dict, special_tokens:list[str], merge_ranks:dict ) -> list[int]:
-    
+    """encoding multiple stories in a text file divided by special tokens if they are present in the text file"""""
    
     
     
@@ -436,7 +439,7 @@ def text_encoder(text:str, PAT:str, bytes_to_id:dict, special_tokens:list[str], 
               
               
               
-    for story in parts_special_tokens:
+    for story in parts_special_tokens:       #encoding each story or special token in the text file
                   
         if story in special_tokens:                       
                       
@@ -481,26 +484,26 @@ class Tokenizer:
         
         buffer=""
             
-        if not self.special_tokens:
-            for chunk in iterable:
+        if not self.special_tokens:              # case with no special token
+            for chunk in iterable:              # Iterate over iterable
                         
                         
-                buffer += chunk
+                buffer += chunk                 # adding the possible remaining story from the previous iteration to the current chunk
                         
-                buffer_last_matche=list(re.finditer(self.PAT, buffer))[-1].end()
+                buffer_last_matche=list(re.finditer(self.PAT, buffer))[-1].end()  # finding the position of the end of last regular expression match in the buffer
                         
-                if buffer_last_matche==len(buffer)-1:
+                if buffer_last_matche==len(buffer)-1:         # if there is nothing left after the last regular expression match in the buffer, we can encode the whole buffer and set the buffer to empty
                      text=buffer
                      buffer=""
                            
                         
                 else:
-                    text=buffer[:buffer_last_matche+1]
-                    buffer=buffer[buffer_last_matche+1:]
+                    text=buffer[:buffer_last_matche+1]    
+                    buffer=buffer[buffer_last_matche+1:]     #keeping the remaining part after the last regular expression match in the buffer for the next iteration
                         
                 yield from  self.encode(text)
                         
-        else:
+        else:          
             
             for chunk in iterable:
                 
@@ -511,14 +514,15 @@ class Tokenizer:
                         
                         
                 special_tokens_in_buffer=list(re.finditer(self.re_pecial_tokens, buffer))
-                if not special_tokens_in_buffer:
+                
+                if not special_tokens_in_buffer:      #case with no special token found in the buffer, we do not encode and wait for the next chunk
                     continue
                 
-                last_special_token_end=special_tokens_in_buffer[-1].end()
+                last_special_token_end=special_tokens_in_buffer[-1].end()     
                 
                 text=buffer[0:last_special_token_end]
                 
-                buffer=buffer[last_special_token_end:]
+                buffer=buffer[last_special_token_end:]       
                 
                 yield from self.encode(text)
                 
